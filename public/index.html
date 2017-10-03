@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+  <meta charset="utf-8">
+  <title>Complex icons</title>
+  <style>
+    #map {
+      height: 100%;
+    }
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="map"></div>
+  <script>
+    var users = [];
+    var images = [];
+
+    function initMap() {
+      var map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 10,
+        center: { lat: -33.9, lng: 151.2 }
+      });
+
+      fetch('http://localhost:9999/users').then(response => response.json()).then(res => {
+        res.forEach((ele, index) => {
+          console.log(index);
+          users.push(
+            [
+              ele.name,
+              +ele.address.geo.lat,
+              +ele.address.geo.lng,
+              res.length - index
+            ]
+          );
+          images.push(
+            {
+              url: ele.url,
+              // This marker is 20 pixels wide by 32 pixels high.
+              size: new google.maps.Size(50, 50),
+              // The origin for this image is (0, 0).
+              origin: new google.maps.Point(0, 0),
+              // The anchor for this image is the base of the flagpole at (0, 32).
+              anchor: new google.maps.Point(0, 32)
+            }
+          )
+        })
+        setMarkers(map);
+      });
+    }
+
+    function setMarkers(map) {
+      var shape = {
+        coords: [1, 1, 1, 20, 18, 20, 18, 1],
+        type: 'poly'
+      };
+      for (var i = 0; i < users.length; i++) {
+        var user = users[i];
+        var marker = new google.maps.Marker({
+          position: { lat: user[1], lng: user[2] },
+          map: map,
+          icon: images[i],
+          shape: shape,
+          title: user[0],
+          zIndex: user[3]
+        });
+      }
+    }
+  </script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB1TgcfHxJc57VbtzoLUMpB8Z4E6QUI_Fg&callback=initMap">
+  </script>
+</body>
+</html>

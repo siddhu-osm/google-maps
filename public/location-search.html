@@ -6,19 +6,59 @@
   <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
   <meta charset="utf-8">
   <style>
-    /* Always set the map height explicitly to define the size of the div
-       * element that contains the map. */
-
     #map {
       height: 100%;
     }
-    /* Optional: Makes the sample page fill the window. */
 
     html,
     body {
       height: 100%;
       margin: 0;
       padding: 0;
+    }
+
+    h4, h5{
+      margin: 0;
+    }
+
+    .info-content {
+      display: flex;
+      flex-direction: row;
+    }
+
+    .info-content .content {
+      margin-left: 10px;
+    }
+
+    .gm-style-iw+div,
+    .gm-style-iw>div:nth-child(2) {
+      display: none !important;
+    }
+
+    .star-ratings-sprite {
+      background: url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/2605/star-rating-sprite.png") repeat-x;
+      font-size: 0;
+      height: 21px;
+      line-height: 0;
+      overflow: hidden;
+      text-indent: -999em;
+      width: 110px;
+    }
+
+    .star-ratings-sprite-rating {
+      background: url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/2605/star-rating-sprite.png") repeat-x;
+      background-position: 0 100%;
+      float: left;
+      height: 21px;
+      display: block;
+    }
+    .star {
+      display: flex;
+      align-items: center;
+      margin-top: 6px;
+    }
+    .star h5 {
+      margin-left: 10px;
     }
   </style>
 </head>
@@ -29,7 +69,6 @@
     var map;
 
     function initialize() {
-      // Create a map centered in Pyrmont, Sydney (Australia).
       navigator.geolocation.getCurrentPosition(function (position) {
         var pos = {
           lat: position.coords.latitude,
@@ -46,18 +85,14 @@
           types: ['restaurant']
         };
 
-        console.log(request);
-
         var service = new google.maps.places.PlacesService(map);
         service.textSearch(request, callback);
       });
-      // Search for Google's office in Australia.
     }
 
     // Checks that the PlacesServiceStatus is OK, and adds a marker
     // using the place ID and location from the PlacesService.
     function callback(results, status, pagination) {
-      console.log(pagination);
       console.log(results);
       if (status == google.maps.places.PlacesServiceStatus.OK) {
         results.forEach((result, index) => {
@@ -71,10 +106,33 @@
               placeId: result.place_id,
               location: result.geometry.location
             },
-            title: result.name,
             zIndex: results.length - index
           });
+
+          var contentString = `<div class="info-content">
+              <div>
+                <img src="${result.photos[0].getUrl({ 'maxWidth': 60, 'maxHeight': 60 })}">
+              </div>
+              <div class="content">
+                <h4>${result.name}</h4>
+                <div class="star">
+                  <div class="star-ratings-sprite">
+                    <span style="width:${(result.rating * 20)}%" class="star-ratings-sprite-rating"></span>
+                  </div>
+                    <h5>${result.rating}</h5>
+                </div>
+              </div>
+            </div>`;
+          var infoWindow = new google.maps.InfoWindow({
+            content: contentString
+          });
+          marker.addListener('mouseover', function () {
+            infoWindow.open(map, marker);
+          });
+          marker.addListener('mouseout', () => infoWindow.close())
         });
+
+
         if (pagination.hasNextPage) {
           pagination.nextPage();
         }
